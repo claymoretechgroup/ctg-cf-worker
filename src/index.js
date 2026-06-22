@@ -1,9 +1,13 @@
 // CTG CF Staging — smoke-test Worker.
 //
 // Mirrors the role of the PHP staging index page: a live connection check
-// against the staging datastore. Hit the Worker root and you should get a
-// JSON payload listing the seeded guitars and their pickup counts. If that
-// comes back green, your D1 binding and seed scenario are wired correctly.
+// against the staging datastores. Hit the Worker root and you should get a
+// JSON payload listing the seeded guitars (D1) and the seeded objects (R2).
+// If both come back green, your bindings and seed data are wired correctly.
+//
+// R2 is checked via env.BUCKET.list() — the Worker binding is the source of
+// truth, which sidesteps the CLI-vs-binding local-store divergence in
+// workers-sdk #13034.
 
 export default {
   async fetch(request, env) {
@@ -16,11 +20,12 @@ export default {
         ORDER BY g.year_purchased`
     ).all();
 
+    const listing = await env.BUCKET.list();
+
     return Response.json({
       ok: true,
-      datastore: "d1",
-      count: results.length,
-      guitars: results,
+      d1: { count: results.length, guitars: results },
+      r2: { count: listing.objects.length, keys: listing.objects.map((o) => o.key) },
     });
   },
 };
