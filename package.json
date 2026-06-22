@@ -1,0 +1,14 @@
+{
+  "name": "ctg-cf-staging",
+  "version": "0.1.0",
+  "description": "Local staging environment for Cloudflare Workers backed by D1, mirroring ctg-php-staging.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3"
+  }
+}

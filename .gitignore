@@ -1,0 +1,28 @@
+# AI
+.claude/
+.agents/
+.codex/
+
+# Dependencies
+node_modules/
+
+# Wrangler local state (local D1/KV/R2 emulation) and build output
+.wrangler/
+dist/
+
+# Secrets
+.dev.vars
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
