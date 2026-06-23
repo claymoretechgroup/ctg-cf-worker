@@ -165,6 +165,15 @@ your real Cloudflare account, so they require `wrangler login` (or a
 `CLOUDFLARE_API_TOKEN` env var), a real `database_id` in `wrangler.jsonc`, and the
 remote bucket to exist.
 
+> **R2 needs more than `wrangler login`.** `wrangler login` (OAuth) has **no R2
+> scope** — it can't create buckets or read/write objects, and it can't deploy a
+> Worker that has an R2 binding. Remote R2 requires a **`CLOUDFLARE_API_TOKEN`**
+> (with *Workers R2 Storage → Edit*), **and** R2 must be enabled on the account —
+> which currently needs **billing set up (a card on file), even on the free tier**.
+> D1 and Workers, by contrast, work with `wrangler login` alone. (Verified
+> 2026-06-23: the D1 remote path — `db-create` + `load-remote` — works on OAuth;
+> R2 was blocked by both of the above.)
+
 ### One-time setup
 
 ```bash
