@@ -1,12 +1,12 @@
 {
-  "name": "ctg-cf-staging",
+  "name": "ctg-cf-template",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
 
   // Local D1 database binding.
   //
-  // For local staging (`npm run dev`), wrangler emulates this against a SQLite
-  // file under .wrangler/state — no remote database is required, and
+  // For local development (`npm run dev`), wrangler emulates this against a
+  // SQLite file under .wrangler/state — no remote database is required, and
   // database_id can stay as the placeholder below.
   //
   // To deploy to a real remote D1 instance, run `npm run db-create`, then paste
@@ -14,7 +14,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "ctg_cf_staging",
+      "database_name": "ctg_cf_template",
       "database_id": "local-placeholder-replace-for-remote"
     }
   ],
@@ -27,7 +27,7 @@
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "ctg-cf-staging"
+      "bucket_name": "ctg-cf-template"
     }
   ]
 }

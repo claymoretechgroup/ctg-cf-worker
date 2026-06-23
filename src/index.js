@@ -1,9 +1,9 @@
-// CTG CF Staging — smoke-test Worker.
+// CTG CF Template — smoke-test Worker.
 //
-// Mirrors the role of the PHP staging index page: a live connection check
-// against the staging datastores. Hit the Worker root and you should get a
-// JSON payload listing the seeded guitars (D1) and the seeded objects (R2).
-// If both come back green, your bindings and seed data are wired correctly.
+// A live connection check against the local datastores: hit the Worker root
+// and you should get a JSON payload listing the seeded guitars (D1) and the
+// seeded objects (R2). If both come back green, your bindings and seed data
+// are wired correctly. Replace this with your real Worker.
 //
 // R2 is checked via env.BUCKET.list() — the Worker binding is the source of
 // truth, which sidesteps the CLI-vs-binding local-store divergence in

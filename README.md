@@ -1,8 +1,8 @@
-# CTG CF Staging
+# CTG CF Template
 
-A local staging environment for developing and testing **Cloudflare Workers** backed by **D1** (Cloudflare's SQLite database) and **R2** (object storage). It's the Cloudflare counterpart to `ctg-php-staging`: clone it into a project's `staging/` directory, run one command, and develop against a realistic Worker + database + object-store stack with seedable fixtures.
+A clone-me starter for a **Cloudflare Worker** backed by **D1** (Cloudflare's SQLite database) and **R2** (object storage). Clone it as the root of a new Worker project and you get the bindings wired up, seedable D1 scenarios + R2 fixtures, and one-command npm verbs for the whole lifecycle — local development through deploy.
 
-Unlike the PHP staging (which runs MariaDB in Docker), there's **no container to manage** — `wrangler dev` emulates D1 and R2 locally against the same `workerd` runtime Cloudflare runs in production.
+There's **no container or separate environment to stand up** — `wrangler` *is* the runtime: `wrangler dev` emulates D1 and R2 locally against the same `workerd` Cloudflare runs in production, and `wrangler deploy` ships the same Worker to your account.
 
 ---
 
@@ -72,7 +72,7 @@ If both come back green, your bindings and seed data are wired correctly.
 
 ## npm scripts
 
-Run `npm run` to list them. The verbs mirror `ctg-php-staging`; arguments are passed after `--`:
+Run `npm run` to list them. Arguments are passed after `--`:
 
 | Script | What it does |
 |---|---|
@@ -124,9 +124,9 @@ remote bucket to exist.
 ### One-time setup
 
 ```bash
-npm run db-create       # wrangler d1 create ctg_cf_staging
+npm run db-create       # wrangler d1 create ctg_cf_template
 # copy the returned database_id into wrangler.jsonc
-npm run r2-create       # wrangler r2 bucket create ctg-cf-staging
+npm run r2-create       # wrangler r2 bucket create ctg-cf-template
 ```
 
 ### Deploy the Worker
@@ -144,10 +144,10 @@ D1 has no separate "import" command — you import by applying a `.sql` file:
 
 ```bash
 npm run load-remote -- guitars
-#  → wrangler d1 execute ctg_cf_staging --remote --file=scenarios/guitars.d1.sql
+#  → wrangler d1 execute ctg_cf_template --remote --file=scenarios/guitars.d1.sql
 
 npm run dump-remote -- prod-snapshot
-#  → wrangler d1 export ctg_cf_staging --remote --output=scenarios/prod-snapshot.d1.sql
+#  → wrangler d1 export ctg_cf_template --remote --output=scenarios/prod-snapshot.d1.sql
 ```
 
 Export flags worth knowing: `--no-data` (schema only), `--no-schema` (data only),
@@ -157,8 +157,8 @@ come in as SQL.
 ### Remote R2 objects
 
 ```bash
-wrangler r2 object put ctg-cf-staging/<key> --remote --file=<path>
-wrangler r2 object get ctg-cf-staging/<key> --remote --file=<path>
+wrangler r2 object put ctg-cf-template/<key> --remote --file=<path>
+wrangler r2 object get ctg-cf-template/<key> --remote --file=<path>
 ```
 
 ### Beyond this template

@@ -1,4 +1,4 @@
-// Shared config + wrangler runner for the staging scripts.
+// Shared config + wrangler runner for the project scripts.
 //
 // One place for the binding names and the local-state flags so every verb
 // stays consistent. --local + a fixed --persist-to keeps `wrangler dev` and
@@ -7,8 +7,8 @@
 
 import { spawnSync } from "node:child_process";
 
-export const DB = "ctg_cf_staging"; // must match database_name in wrangler.jsonc
-export const BUCKET = "ctg-cf-staging"; // must match bucket_name (R2: hyphens, no underscores)
+export const DB = "ctg_cf_template"; // must match database_name in wrangler.jsonc
+export const BUCKET = "ctg-cf-template"; // must match bucket_name (R2: hyphens, no underscores)
 export const STATE = ".wrangler/state"; // local binding data (D1/R2/...); shared by dev + CLI
 export const LOCAL = ["--local", "--persist-to", STATE];
 
