@@ -233,6 +233,57 @@ const cached = await env.CACHE.list();
 
 ---
 
+## Porting a MariaDB schema to D1
+
+> Same idea as *Adding a binding* — a recipe an AI agent can follow to turn a
+> MariaDB schema/dump into a D1 scenario file rather than guess at SQLite's
+> differences. `scenarios/guitars.d1.sql` is the worked example; its header lists
+> the transforms that particular dataset used.
+
+D1 *is* SQLite, so porting is mostly a mechanical type/DDL rewrite into a
+`scenarios/<name>.d1.sql`:
+
+| MariaDB | D1 / SQLite |
+|---|---|
+| `INT AUTO_INCREMENT PRIMARY KEY` | `INTEGER PRIMARY KEY AUTOINCREMENT` |
+| `TINYINT`/`SMALLINT`/`BIGINT`/`INT` (± `UNSIGNED`) | `INTEGER` (no unsigned — drop it) |
+| `TINYINT(1)` / `BOOLEAN` | `INTEGER` (0/1) |
+| `DECIMAL(p,s)` / `FLOAT` / `DOUBLE` | `REAL` (or `TEXT` if you need exact precision) |
+| `VARCHAR(n)` / `CHAR(n)` / `*TEXT` | `TEXT` (length not enforced) |
+| `ENUM('a','b')` | `TEXT CHECK (col IN ('a','b'))` |
+| `SET(...)` | `TEXT` (no equivalent — delimit, or normalize to a join table) |
+| `DATE` / `DATETIME` / `TIMESTAMP` | `TEXT` (ISO-8601) or `INTEGER` (unix epoch) — pick one |
+| `YEAR` | `INTEGER` |
+| `JSON` | `TEXT` (query with SQLite's `json_*()` functions) |
+| `BLOB` / `BINARY` / `VARBINARY` | `BLOB` |
+
+**Strip these — SQLite rejects them:** table options (`ENGINE=…`, `DEFAULT
+CHARSET=…`, `COLLATE=…`, `AUTO_INCREMENT=<n>`, `ROW_FORMAT=…`), column `COMMENT
+'…'`, `UNSIGNED`/`ZEROFILL`, and mysqldump noise (`LOCK TABLES`, `/*!40101 … */`
+conditional comments).
+
+**Gotchas that silently break the load:**
+
+- **Inline indexes aren't allowed.** MariaDB's `KEY idx (col)` / `UNIQUE KEY name
+  (col)` *inside* `CREATE TABLE` must become separate statements after it:
+  `CREATE INDEX idx ON tbl(col);` / `CREATE UNIQUE INDEX …`. (A plain `UNIQUE
+  (col)` column constraint is fine inline.)
+- **`ON UPDATE CURRENT_TIMESTAMP` is unsupported** — use an `AFTER UPDATE` trigger
+  or set the value in app code. (`DEFAULT CURRENT_TIMESTAMP` *is* fine.)
+- **String escaping:** convert MySQL's `\'` to SQLite's `''`.
+- `FOREIGN KEY` carries over as-is — **D1 enforces foreign keys by default** (no
+  `PRAGMA foreign_keys` needed).
+
+**Verify the port by loading it** — D1 enforces `CHECK` and `FOREIGN KEY`
+constraints, so a bad conversion fails loudly rather than silently:
+
+```bash
+npm run load-scenario -- <name>          # applies scenarios/<name>.d1.sql locally
+npm run query -- "SELECT count(*) FROM <table>"
+```
+
+---
+
 ## Scope
 
 This template ships with a **Worker + D1 + R2** wired end-to-end. The remaining

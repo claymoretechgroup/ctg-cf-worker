@@ -7,6 +7,8 @@
 --   * ENUM(...)                       -> TEXT + CHECK(col IN (...))
 --   * VARCHAR(n)                      -> TEXT (length not enforced by SQLite)
 -- Everything else (IF NOT EXISTS, FOREIGN KEY, the INSERTs) carries over as-is.
+-- General rules for porting an arbitrary MariaDB schema: see the README
+-- "Porting a MariaDB schema to D1" recipe.
 
 CREATE TABLE IF NOT EXISTS guitars (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
