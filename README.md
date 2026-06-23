@@ -8,14 +8,15 @@ Unlike the PHP staging (which runs MariaDB in Docker), there's **no container to
 
 ## Prerequisites
 
-- **Node.js** (18+)
-- That's it — `wrangler` is pinned as a dev dependency and run via `npx`.
+- **Node.js** (18+).
+- A **2022-or-newer 64-bit Linux or macOS** host. `wrangler`'s local mode runs on Cloudflare's `workerd` binary, which needs **glibc ≥ 2.32** on Linux (Ubuntu 22.04+, Debian 12+) — Node alone isn't sufficient. On an older host (e.g. Ubuntu 20.04 / glibc 2.31), run the commands inside a modern container, e.g. `node:22-bookworm`.
+- `wrangler` itself is pinned as a dev dependency and run via `npx` — nothing to install globally.
 
 ```bash
 npm install
 ```
 
-A Cloudflare account is only needed for the **Remote** targets (`deploy`, `db-create`, `r2-create`); local development needs nothing.
+A Cloudflare account is only needed for the **Remote** scripts (`deploy`, `db-create`, `r2-create`); local development needs nothing.
 
 ---
 
@@ -23,8 +24,8 @@ A Cloudflare account is only needed for the **Remote** targets (`deploy`, `db-cr
 
 ```bash
 npm install            # install wrangler
-make init              # seed the local D1 (guitars) + R2 (fixtures)
-make dev               # start the Worker locally
+npm run init           # seed the local D1 (guitars) + R2 (fixtures)
+npm run dev            # start the Worker locally
 ```
 
 Then open the Worker URL that `wrangler dev` prints. The smoke-test Worker queries both stores and returns JSON:
@@ -47,45 +48,48 @@ If both come back green, your bindings and seed data are wired correctly.
 ┌────────────────────────────────────────────────────────┐
 │                      Your machine                        │
 │                                                          │
-│   make dev  ──►  wrangler dev (workerd)                  │
-│                    │                                     │
-│                    ├─ D1 binding  ("DB")    ──► local D1 │
-│                    └─ R2 binding  ("BUCKET")──► local R2 │
+│   npm run dev  ──►  wrangler dev (workerd)               │
+│                       │                                  │
+│                       ├─ D1 binding ("DB")    ──► local D1│
+│                       └─ R2 binding ("BUCKET")──► local R2│
 │                                                          │
 │        both persist under .wrangler/state (git-ignored)  │
 │                                                          │
-│   scenarios/*.d1.sql  ── make init / load-scenario  (D1) │
-│   fixtures/r2/**      ── make init / r2-seed        (R2) │
+│   scenarios/*.d1.sql  ── npm run init / load-scenario (D1)│
+│   fixtures/r2/**      ── npm run init / r2-seed       (R2)│
 └────────────────────────────────────────────────────────┘
 ```
 
 - `src/index.js` — the Worker (here, a D1 + R2 smoke test).
-- `wrangler.toml` — the `DB` (D1) and `BUCKET` (R2) bindings. `database_id` is a placeholder for local use; replace it for remote deploys.
+- `wrangler.jsonc` — the `DB` (D1) and `BUCKET` (R2) bindings. `database_id` is a placeholder for local use; replace it for remote deploys.
 - `scenarios/` — D1 seed/snapshot `.sql` files. `guitars.d1.sql` is the default fixture.
 - `fixtures/r2/` — files seeded into the local R2 bucket; the object key is the path under `fixtures/r2/`.
+- `scripts/` — small Node helpers behind the npm scripts (`init`, `r2-seed`, the `d1` verbs). They centralize the binding names and the local-state flags.
 
-> **Local store consistency:** `wrangler dev` and every local CLI command are pinned to the same `--persist-to .wrangler/state`. This is required for R2 — without a matching persist path, CLI-seeded objects aren't visible to the running Worker ([workers-sdk #13034](https://github.com/cloudflare/workers-sdk/issues/13034)). The Makefile handles this for you.
+> **Local store consistency:** `wrangler dev` and every local CLI command are pinned to the same `--persist-to .wrangler/state`. This is required for R2 — without a matching persist path, CLI-seeded objects aren't visible to the running Worker ([workers-sdk #13034](https://github.com/cloudflare/workers-sdk/issues/13034)). The npm scripts handle this for you.
 
 ---
 
-## Make targets
+## npm scripts
 
-Run `make help` for the list. The verbs mirror `ctg-php-staging`:
+Run `npm run` to list them. The verbs mirror `ctg-php-staging`; arguments are passed after `--`:
 
-| Target | What it does |
+| Script | What it does |
 |---|---|
-| `make dev` | Start the Worker locally with local D1 + R2 (foreground) |
-| `make init` | Seed the local D1 (`SCENARIO=guitars`) and R2 (`fixtures/r2/`) |
-| `make reset` | Wipe all local state and re-seed D1 + R2 |
-| `make load-scenario NAME=x` | Load `scenarios/x.d1.sql` into the local D1 |
-| `make dump NAME=x` | Export the local D1 to `scenarios/x.d1.sql` |
-| `make query CMD="SELECT …"` | Run SQL against the local D1 (inspection) |
-| `make r2-seed` | Seed the local R2 bucket from `fixtures/r2/` |
-| `make db-create` | Create the remote D1 database (one-time) |
-| `make r2-create` | Create the remote R2 bucket (one-time) |
-| `make load-remote NAME=x` | Import `scenarios/x.d1.sql` into the **remote** D1 |
-| `make dump-remote NAME=x` | Export the **remote** D1 to `scenarios/x.d1.sql` |
-| `make deploy` | Deploy the Worker to Cloudflare |
+| `npm run dev` | Start the Worker locally with local D1 + R2 (foreground) |
+| `npm run init` | Seed the local D1 (`SCENARIO=guitars`) and R2 (`fixtures/r2/`) |
+| `npm run reset` | Wipe all local state and re-seed D1 + R2 |
+| `npm run load-scenario -- x` | Load `scenarios/x.d1.sql` into the local D1 |
+| `npm run dump -- x` | Export the local D1 to `scenarios/x.d1.sql` |
+| `npm run query -- "SELECT …"` | Run SQL against the local D1 (inspection) |
+| `npm run r2-seed` | Seed the local R2 bucket from `fixtures/r2/` |
+| `npm run db-create` | Create the remote D1 database (one-time) |
+| `npm run r2-create` | Create the remote R2 bucket (one-time) |
+| `npm run load-remote -- x` | Import `scenarios/x.d1.sql` into the **remote** D1 |
+| `npm run dump-remote -- x` | Export the **remote** D1 to `scenarios/x.d1.sql` |
+| `npm run deploy` | Deploy the Worker to Cloudflare |
+
+Pick a different D1 scenario for `init`/`reset` with the `SCENARIO` env var, e.g. `SCENARIO=with-prs npm run init`.
 
 ---
 
@@ -96,17 +100,17 @@ Run `make help` for the list. The verbs mirror `ctg-php-staging`:
 Scenarios are plain SQLite `.sql` files in `scenarios/`. Capture the current local state as a new scenario:
 
 ```bash
-make query CMD="INSERT INTO guitars (make, model, color, year_purchased) VALUES ('PRS','Custom 24','Whale Blue',2025)"
-make dump NAME=with-prs
+npm run query -- "INSERT INTO guitars (make, model, color, year_purchased) VALUES ('PRS','Custom 24','Whale Blue',2025)"
+npm run dump -- with-prs
 ```
 
-Load it later (or in another clone) with `make load-scenario NAME=with-prs`.
+Load it later (or in another clone) with `npm run load-scenario -- with-prs`.
 
 `guitars.d1.sql` was ported from `ctg-php-staging/data/guitars.sql`; the MariaDB→SQLite transform notes live in that file's header.
 
 ### R2 fixtures
 
-R2 has no single-file dump/load model — a "fixture set" is just a directory tree under `fixtures/r2/`. Each file becomes an object whose key is its path beneath `fixtures/r2/` (e.g. `fixtures/r2/specs/ibanez-grx20l.txt` → object `specs/ibanez-grx20l.txt`). Add files there and run `make r2-seed` (or `make reset` to rebuild both stores).
+R2 has no single-file dump/load model — a "fixture set" is just a directory tree under `fixtures/r2/`. Each file becomes an object whose key is its path beneath `fixtures/r2/` (e.g. `fixtures/r2/specs/ibanez-grx20l.txt` → object `specs/ibanez-grx20l.txt`). Add files there and run `npm run r2-seed` (or `npm run reset` to rebuild both stores).
 
 ---
 
@@ -114,24 +118,24 @@ R2 has no single-file dump/load model — a "fixture set" is just a directory tr
 
 Everything above runs **locally** and needs no account. The commands below talk to
 your real Cloudflare account, so they require `wrangler login` (or a
-`CLOUDFLARE_API_TOKEN` env var), a real `database_id` in `wrangler.toml`, and the
+`CLOUDFLARE_API_TOKEN` env var), a real `database_id` in `wrangler.jsonc`, and the
 remote bucket to exist.
 
 ### One-time setup
 
 ```bash
-make db-create          # wrangler d1 create ctg_cf_staging
-# copy the returned database_id into wrangler.toml
-make r2-create          # wrangler r2 bucket create ctg-cf-staging
+npm run db-create       # wrangler d1 create ctg_cf_staging
+# copy the returned database_id into wrangler.jsonc
+npm run r2-create       # wrangler r2 bucket create ctg-cf-staging
 ```
 
 ### Deploy the Worker
 
 ```bash
-make deploy             # wrangler deploy — uploads src/index.js + bindings
+npm run deploy          # wrangler deploy — uploads src/index.js + bindings
 ```
 
-For separate prod/staging targets, add `[env.<name>]` blocks to `wrangler.toml`
+For separate prod/staging targets, add `[env.<name>]` blocks to `wrangler.jsonc`
 and deploy a named environment with `wrangler deploy --env <name>`.
 
 ### Import / export a remote D1
@@ -139,10 +143,10 @@ and deploy a named environment with `wrangler deploy --env <name>`.
 D1 has no separate "import" command — you import by applying a `.sql` file:
 
 ```bash
-make load-remote NAME=guitars
+npm run load-remote -- guitars
 #  → wrangler d1 execute ctg_cf_staging --remote --file=scenarios/guitars.d1.sql
 
-make dump-remote NAME=prod-snapshot
+npm run dump-remote -- prod-snapshot
 #  → wrangler d1 export ctg_cf_staging --remote --output=scenarios/prod-snapshot.d1.sql
 ```
 

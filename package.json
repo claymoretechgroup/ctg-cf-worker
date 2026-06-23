@@ -1,12 +1,23 @@
 {
   "name": "ctg-cf-staging",
   "version": "0.1.0",
-  "description": "Local staging environment for Cloudflare Workers backed by D1, mirroring ctg-php-staging.",
+  "description": "Local staging environment for Cloudflare Workers backed by D1 + R2, mirroring ctg-php-staging.",
   "private": true,
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "dev": "wrangler dev --persist-to .wrangler/state",
+    "init": "node scripts/init.js",
+    "reset": "node scripts/init.js --reset",
+    "r2-seed": "node scripts/r2-seed.js",
+    "load-scenario": "node scripts/d1.js load-scenario",
+    "dump": "node scripts/d1.js dump",
+    "query": "node scripts/d1.js query",
+    "deploy": "wrangler deploy",
+    "db-create": "wrangler d1 create ctg_cf_staging",
+    "r2-create": "wrangler r2 bucket create ctg-cf-staging",
+    "load-remote": "node scripts/d1.js load-remote",
+    "dump-remote": "node scripts/d1.js dump-remote"
   },
   "devDependencies": {
     "wrangler": "^3"
