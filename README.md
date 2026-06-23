@@ -1,4 +1,4 @@
-# CTG CF Template
+# CTG CF Worker
 
 A clone-me starter for a **Cloudflare Worker** backed by **D1** (Cloudflare's SQLite database) and **R2** (object storage). Clone it as the root of a new Worker project and you get the bindings wired up, seedable D1 scenarios + R2 fixtures, and one-command npm verbs for the whole lifecycle — local development through deploy.
 
@@ -39,6 +39,27 @@ Then open the Worker URL that `wrangler dev` prints. The smoke-test Worker queri
 ```
 
 If both come back green, your bindings and seed data are wired correctly.
+
+---
+
+## Start a new project
+
+The Quick start above runs the demo as-is. To turn a clone into *your own* project,
+run the one-shot setup — it renames the Worker / D1 / R2 identifiers, detaches this
+starter's git history, and then deletes itself:
+
+```bash
+git clone git@github-ctg:claymoretechgroup/ctg-cf-worker.git my-app
+cd my-app
+npm install
+npm run setup -- my-app          # rename everything to "my-app"
+#   add --strip-demo for a bare Worker (no guitars scenario / R2 fixtures)
+```
+
+`<project-name>` must be lowercase letters, digits, and hyphens (a valid Worker
+name); the D1 database gets the underscored form (`my_app`). Only **git and npm**
+are used — both are already required for any wrangler project, so setup adds no
+extra tooling. Afterward: `npm run init && npm run dev`.
 
 ---
 
@@ -124,9 +145,9 @@ remote bucket to exist.
 ### One-time setup
 
 ```bash
-npm run db-create       # wrangler d1 create ctg_cf_template
+npm run db-create       # wrangler d1 create ctg_cf_worker
 # copy the returned database_id into wrangler.jsonc
-npm run r2-create       # wrangler r2 bucket create ctg-cf-template
+npm run r2-create       # wrangler r2 bucket create ctg-cf-worker
 ```
 
 ### Deploy the Worker
@@ -144,10 +165,10 @@ D1 has no separate "import" command — you import by applying a `.sql` file:
 
 ```bash
 npm run load-remote -- guitars
-#  → wrangler d1 execute ctg_cf_template --remote --file=scenarios/guitars.d1.sql
+#  → wrangler d1 execute ctg_cf_worker --remote --file=scenarios/guitars.d1.sql
 
 npm run dump-remote -- prod-snapshot
-#  → wrangler d1 export ctg_cf_template --remote --output=scenarios/prod-snapshot.d1.sql
+#  → wrangler d1 export ctg_cf_worker --remote --output=scenarios/prod-snapshot.d1.sql
 ```
 
 Export flags worth knowing: `--no-data` (schema only), `--no-schema` (data only),
@@ -157,11 +178,11 @@ come in as SQL.
 ### Remote R2 objects
 
 ```bash
-wrangler r2 object put ctg-cf-template/<key> --remote --file=<path>
-wrangler r2 object get ctg-cf-template/<key> --remote --file=<path>
+wrangler r2 object put ctg-cf-worker/<key> --remote --file=<path>
+wrangler r2 object get ctg-cf-worker/<key> --remote --file=<path>
 ```
 
-### Beyond this template
+### Beyond this starter
 
 A few wrangler commands you'll likely want but that aren't wrapped here:
 
@@ -215,7 +236,7 @@ Wiring a new one is four steps:
 
 ```json
 // 2. package.json — provision verb (returns an id to paste into wrangler.jsonc)
-"kv-create": "wrangler kv namespace create ctg_cf_template_cache"
+"kv-create": "wrangler kv namespace create ctg_cf_worker_cache"
 ```
 
 ```js
@@ -286,7 +307,7 @@ npm run query -- "SELECT count(*) FROM <table>"
 
 ## Scope
 
-This template ships with a **Worker + D1 + R2** wired end-to-end. The remaining
+This starter ships with a **Worker + D1 + R2** wired end-to-end. The remaining
 Cloudflare bindings (KV, Durable Objects, Queues, Service bindings, Workers AI, …)
 are intentionally **not** pre-built — they're added per the recipe above when a
 consuming project actually needs them, so each binding's seed/snapshot tooling is

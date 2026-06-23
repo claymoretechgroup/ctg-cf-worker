@@ -1,4 +1,4 @@
-// CTG CF Template — smoke-test Worker.
+// CTG CF Worker — smoke-test Worker.
 //
 // A live connection check against the local datastores: hit the Worker root
 // and you should get a JSON payload listing the seeded guitars (D1) and the

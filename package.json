@@ -1,11 +1,12 @@
 {
-  "name": "ctg-cf-template",
+  "name": "ctg-cf-worker",
   "version": "0.1.0",
   "description": "Clone-me starter for a Cloudflare Worker (D1 + R2) with local-dev/deploy scripts and seed fixtures.",
   "private": true,
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "setup": "node scripts/setup.js",
     "dev": "wrangler dev --persist-to .wrangler/state",
     "init": "node scripts/init.js",
     "reset": "node scripts/init.js --reset",
@@ -14,8 +15,8 @@
     "dump": "node scripts/d1.js dump",
     "query": "node scripts/d1.js query",
     "deploy": "wrangler deploy",
-    "db-create": "wrangler d1 create ctg_cf_template",
-    "r2-create": "wrangler r2 bucket create ctg-cf-template",
+    "db-create": "wrangler d1 create ctg_cf_worker",
+    "r2-create": "wrangler r2 bucket create ctg-cf-worker",
     "load-remote": "node scripts/d1.js load-remote",
     "dump-remote": "node scripts/d1.js dump-remote"
   },

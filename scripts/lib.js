@@ -7,8 +7,8 @@
 
 import { spawnSync } from "node:child_process";
 
-export const DB = "ctg_cf_template"; // must match database_name in wrangler.jsonc
-export const BUCKET = "ctg-cf-template"; // must match bucket_name (R2: hyphens, no underscores)
+export const DB = "ctg_cf_worker"; // must match database_name in wrangler.jsonc
+export const BUCKET = "ctg-cf-worker"; // must match bucket_name (R2: hyphens, no underscores)
 export const STATE = ".wrangler/state"; // local binding data (D1/R2/...); shared by dev + CLI
 export const LOCAL = ["--local", "--persist-to", STATE];
 

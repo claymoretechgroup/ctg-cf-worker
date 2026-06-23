@@ -1,5 +1,5 @@
 {
-  "name": "ctg-cf-template",
+  "name": "ctg-cf-worker",
   "main": "src/index.js",
   "compatibility_date": "2025-01-01",
 
@@ -14,7 +14,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "ctg_cf_template",
+      "database_name": "ctg_cf_worker",
       "database_id": "local-placeholder-replace-for-remote"
     }
   ],
@@ -27,7 +27,7 @@
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "ctg-cf-template"
+      "bucket_name": "ctg-cf-worker"
     }
   ]
 }
