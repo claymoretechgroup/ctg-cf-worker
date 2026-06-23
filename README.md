@@ -172,9 +172,71 @@ A few wrangler commands you'll likely want but that aren't wrapped here:
 
 ---
 
+## Adding a binding
+
+> Written as a verbatim recipe so a person **or an AI agent** can add a binding by
+> pattern-matching the existing D1/R2 wiring — every step names the exact file to
+> edit and the existing block to mirror. Skip any step that doesn't apply.
+
+Cloudflare exposes each resource to the Worker as a **binding** (`env.<NAME>`).
+Wiring a new one is four steps:
+
+1. **Declare it** in `wrangler.jsonc` — add the binding block beside `d1_databases`
+   / `r2_buckets`. The `binding` value becomes the `env.<NAME>` key in `src/index.js`.
+2. **Add a provision verb** to `package.json` scripts (mirror `db-create` /
+   `r2-create`) *only if the resource is created server-side*. No-op for Durable
+   Objects (code classes), Service bindings, and Workers AI.
+3. **Seed it** for local dev *only if it holds data* — add the resource name as a
+   constant in `scripts/lib.js`, then a fixture + seed step mirroring
+   `scripts/init.js` (D1) or `scripts/r2-seed.js` (R2). Queues (you publish, not
+   seed) and DOs (populated by Worker code) have no seed model.
+4. **Extend the smoke test** in `src/index.js` — read the binding and add a field to
+   the JSON response, mirroring the `d1` / `r2` blocks, so `npm run dev` proves it.
+
+**Invariants — keep these or the binding breaks:**
+
+- Every local CLI command and `wrangler dev` must share `--persist-to
+  .wrangler/state` (the `LOCAL` array in `scripts/lib.js`), or seeded state isn't
+  visible to the running Worker ([workers-sdk #13034](https://github.com/cloudflare/workers-sdk/issues/13034)).
+- Match the `wrangler.jsonc` resource name **exactly** in `scripts/lib.js`. R2/KV
+  names use hyphens; D1 uses underscores.
+- Never build a wrangler command as a shell string — push argv tokens through the
+  `wrangler([...])` helper in `scripts/lib.js` (this is what the dropped Makefile
+  got wrong).
+
+**Worked example — adding a KV namespace** (`CACHE`), which fits all four steps:
+
+```jsonc
+// 1. wrangler.jsonc — declare
+"kv_namespaces": [
+  { "binding": "CACHE", "id": "local-placeholder-replace-for-remote" }
+]
+```
+
+```json
+// 2. package.json — provision verb (returns an id to paste into wrangler.jsonc)
+"kv-create": "wrangler kv namespace create ctg_cf_template_cache"
+```
+
+```js
+// 3. scripts/lib.js — name constant; then mirror scripts/r2-seed.js to loop a
+//    fixtures/kv/*.json of { key: value } via:
+//      wrangler(["kv", "key", "put", key, value, "--binding", KV, ...LOCAL])
+export const KV = "CACHE";
+```
+
+```js
+// 4. src/index.js — smoke check
+const cached = await env.CACHE.list();
+// add to the JSON: kv: { count: cached.keys.length }
+```
+
+---
+
 ## Scope
 
-This template covers a **Worker + D1 + R2**. The remaining Cloudflare bindings
-(KV, Durable Objects, Queues) are intentionally **not** included — they'll be added
-when a consuming project actually needs them, so their seed/snapshot tooling is
+This template ships with a **Worker + D1 + R2** wired end-to-end. The remaining
+Cloudflare bindings (KV, Durable Objects, Queues, Service bindings, Workers AI, …)
+are intentionally **not** pre-built — they're added per the recipe above when a
+consuming project actually needs them, so each binding's seed/snapshot tooling is
 designed against a real use case rather than guessed at.
