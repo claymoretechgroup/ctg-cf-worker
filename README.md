@@ -195,8 +195,50 @@ npm run deploy          # wrangler deploy — uploads src/index.js + bindings
 > gets a URL. The upload and binding wiring still succeed before this step — it's
 > purely the public route that's gated. (Verified 2026-06-23.)
 
-For separate prod/staging targets, add `[env.<name>]` blocks to `wrangler.jsonc`
-and deploy a named environment with `wrangler deploy --env <name>`.
+### Deploy to a custom domain (production)
+
+The `*.workers.dev` URL is fine for testing; for production you'll want a real
+hostname (e.g. `api.example.com`). Cloudflare calls this a **Custom Domain** — it
+binds the whole hostname to the Worker and **auto-creates the DNS record and TLS
+cert**. (A *route* like `example.com/api/*` is the other option — a path on an
+existing site, with a DNS record you manage yourself.)
+
+**Prerequisite:** `example.com` must be an **active zone on the same Cloudflare
+account** (its DNS managed by Cloudflare), and the target hostname must not already
+have a conflicting CNAME.
+
+Keep prod separate from local/dev with a **named environment**. Two gotchas: a named
+env **does not inherit bindings**, so redeclare D1/R2 inside it; and it suffixes the
+Worker name (`<name>-production`) unless you override `name`.
+
+```jsonc
+// wrangler.jsonc
+{
+  "name": "ctg-cf-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2025-01-01",
+  "d1_databases": [{ "binding": "DB", "database_name": "ctg_cf_worker", "database_id": "…" }],
+  "r2_buckets":   [{ "binding": "BUCKET", "bucket_name": "ctg-cf-worker" }],
+
+  "env": {
+    "production": {
+      "routes": [{ "pattern": "api.example.com", "custom_domain": true }],
+      "workers_dev": false,
+      "d1_databases": [{ "binding": "DB", "database_name": "ctg_cf_worker_prod", "database_id": "<REAL_PROD_ID>" }],
+      "r2_buckets":   [{ "binding": "BUCKET", "bucket_name": "ctg-cf-worker-prod" }]
+    }
+  }
+}
+```
+
+```bash
+npx wrangler d1 create ctg_cf_worker_prod     # paste the id into env.production
+npx wrangler r2 bucket create ctg-cf-worker-prod
+npx wrangler deploy --env production          # creates the custom domain (DNS + cert), goes live
+npx wrangler secret put <NAME> --env production   # prod secrets
+```
+
+`workers_dev: false` makes the Worker reachable **only** on the custom domain.
 
 ### Import / export a remote D1
 
