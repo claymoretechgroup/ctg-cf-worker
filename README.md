@@ -6,6 +6,29 @@ There's **no container or separate environment to stand up** — `wrangler` *is*
 
 ---
 
+## Why not just use `create-cloudflare`?
+
+Cloudflare's official scaffolder (`npm create cloudflare`, aka C3) gets you a running
+**Worker** — and if that's all you need, use it. What it does *not* give you is a
+**staging environment for your data**: even C3's D1 template is just a binding plus maybe
+a schema — no R2, no seed fixtures, no one-command seed/reset/snapshot, and none of the
+`--persist-to` wiring that makes local R2 actually work.
+
+This repo is the Worker **plus** that staging layer:
+
+- **D1 + R2 both wired**, seeded by a single `npm run init` (`scenarios/*.d1.sql` +
+  `fixtures/r2/**`);
+- the ongoing **stage → reset → inspect** loop — `npm run reset`, `dump`, `query`;
+- the [workers-sdk #13034](https://github.com/cloudflare/workers-sdk/issues/13034)
+  `--persist-to` fix baked in, so CLI-seeded R2 is visible to the running Worker;
+- a smoke test that proves the wiring, and recipes for extending it.
+
+So: reach for `create-cloudflare` for a bare Worker; clone this when you want a Worker whose
+**D1 + R2 are already staged and reseedable**. (This repo isn't built on C3 — bootstrap is a
+plain `git clone` + `npm run setup`, git and npm only.)
+
+---
+
 ## Prerequisites
 
 - **Node.js** (18+).
