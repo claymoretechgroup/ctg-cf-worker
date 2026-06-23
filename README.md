@@ -188,6 +188,13 @@ npm run r2-create       # wrangler r2 bucket create ctg-cf-worker
 npm run deploy          # wrangler deploy — uploads src/index.js + bindings
 ```
 
+> **First deploy needs a `workers.dev` subdomain.** A brand-new account has none, so
+> the first `deploy` can't publish a URL — it prints an onboarding link
+> (`dash.cloudflare.com/<account>/workers/onboarding`). Register your `*.workers.dev`
+> subdomain there once (account-level, you pick the name); after that, every deploy
+> gets a URL. The upload and binding wiring still succeed before this step — it's
+> purely the public route that's gated. (Verified 2026-06-23.)
+
 For separate prod/staging targets, add `[env.<name>]` blocks to `wrangler.jsonc`
 and deploy a named environment with `wrangler deploy --env <name>`.
 
