@@ -131,7 +131,8 @@ Run `npm run` to list them. Arguments are passed after `--`:
 | `npm run r2-create` | Create the remote R2 bucket (one-time) |
 | `npm run load-remote -- x` | Import `scenarios/x.d1.sql` into the **remote** D1 |
 | `npm run dump-remote -- x` | Export the **remote** D1 to `scenarios/x.d1.sql` |
-| `npm run deploy` | Deploy the Worker to Cloudflare |
+| `npm run deploy` | Deploy the Worker to Cloudflare (staging — **unminified**) |
+| `npm run deploy-prod -- <flags>` | Deploy with **minification** on (production); append project flags after `--` |
 
 Pick a different D1 scenario for `init`/`reset` with the `SCENARIO` env var, e.g. `SCENARIO=with-prs npm run init`.
 
@@ -234,11 +235,19 @@ Worker name (`<name>-production`) unless you override `name`.
 ```bash
 npx wrangler d1 create ctg_cf_worker_prod     # paste the id into env.production
 npx wrangler r2 bucket create ctg-cf-worker-prod
-npx wrangler deploy --env production          # creates the custom domain (DNS + cert), goes live
+npm run deploy-prod -- --env production       # minified; creates the custom domain (DNS + cert), goes live
 npx wrangler secret put <NAME> --env production   # prod secrets
 ```
 
 `workers_dev: false` makes the Worker reachable **only** on the custom domain.
+
+> **Staging vs. production deploys.** `npm run deploy` ships the top-level config
+> **unminified** — readable in `wrangler tail` for troubleshooting your staging
+> Worker. `npm run deploy-prod` is identical but adds `--minify` (smaller bundle;
+> source maps still uploaded). It bakes in **no** environment — pass anything
+> project-specific (like the named env above) as flags **after `--`**:
+> `npm run deploy-prod -- --env production`. The `--` is required; without it npm
+> swallows the flags instead of forwarding them to `wrangler`.
 
 ### Import / export a remote D1
 

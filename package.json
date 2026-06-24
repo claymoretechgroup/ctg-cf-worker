@@ -15,6 +15,7 @@
     "dump": "node scripts/d1.js dump",
     "query": "node scripts/d1.js query",
     "deploy": "wrangler deploy",
+    "deploy-prod": "wrangler deploy --minify",
     "db-create": "wrangler d1 create ctg_cf_worker",
     "r2-create": "wrangler r2 bucket create ctg-cf-worker",
     "load-remote": "node scripts/d1.js load-remote",
